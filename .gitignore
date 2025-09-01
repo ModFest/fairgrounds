@@ -1,0 +1,60 @@
+# gradle
+.gradle/
+build/
+out/
+classes/
+
+# eclipse
+*.launch
+
+# idea
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# vscode
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# macos
+*.DS_Store
+
+# fabric
+run/
+
+# java
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
+
+# java results
+*.class
+
+# Please use maven. Modrinth hosts one if you're depending on other mods.
+# https://support.modrinth.com/en/articles/8801191-modrinth-maven
+*.jar
+
+# scala results
+*.tasty
+
+# generally don't publish these
+# If you *need* to commit any of these files, use !path-to/file.ext to allow it.
+# Beware that these files may contain your personal information, or be generally unwanted or opaque.
+*.zip
+*.log
+*.log.gz
+
+# Minecraft-specific junk files
+# You shouldn't be including these in the repo to begin with, but I don't know what you do.
+crash-*.txt
+disconnect-*.txt
+
+# custom
+# Examples of what you might want to put here:
+#   generated/
+#   .local/
