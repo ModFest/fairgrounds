@@ -29,7 +29,7 @@
 	},
 	"entrypoints": {
 		"main": [
-			"io.github.username.modid.ModId"
+			"net.modfest.fairgrounds.Fairgrounds"
 		],
 		"client": [
 		]

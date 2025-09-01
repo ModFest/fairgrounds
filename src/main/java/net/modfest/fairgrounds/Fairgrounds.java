@@ -1,11 +1,11 @@
-package io.github.username.modid;
+package net.modfest.fairgrounds;
 
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ModId implements ModInitializer {
-	public static final String ID = "mod_id";
+public class Fairgrounds implements ModInitializer {
+	public static final String ID = "fairgrounds";
 	public static final Logger LOGGER = LoggerFactory.getLogger(ID);
 
 	@Override
