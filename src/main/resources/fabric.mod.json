@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "${modId}",
+	"version": "${version}",
+	"name": "${modName}",
+	"description": "${modDescription}",
+	"authors": [
+		"${authors}"
+	],
+	"contributors": [
+		"${contributors}"
+	],
+	"contact": {
+		"homepage": "${homepage}",
+		"issues": "${issues}",
+		"sources": "${sources}"
+	},
+	"license": "${license}",
+	"icon": "assets/${modId}/icon.png",
+	"environment": "*",
+	"mixins": [
+		"${modId}.mixins.json"
+	],
+	"depends": {
+		"minecraft": ">=${mc}",
+		"fabricloader": ">=${fl}",
+		"fabric-api": ">=${fapi}",
+		"placeholder-api": ">=${placeholder}"
+	},
+	"entrypoints": {
+		"main": [
+			"net.modfest.Fairgrounds"
+		],
+		"client": [
+			"net.modfest.client.FairgroundsClient"
+		]
+	}
+}

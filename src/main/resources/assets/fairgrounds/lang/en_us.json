@@ -1,0 +1,47 @@
+{
+  "argument.fairgrounds.submission.empty": "No submission found",
+  "argument.fairgrounds.submission.not_found": "No submission with mod id %s found",
+  "argument.fairgrounds.enum.invalid": "Not a valid %s",
+
+  "argument.fairgrounds.booth/status.descriptor": "booth status",
+  "argument.fairgrounds.boot/warp/direction.descriptor": "warp direction",
+
+  "command.fairgrounds.prefix.async": "[Async] ",
+
+  "command.fairgrounds.booth.error.invalid_item": "Invalid item %s",
+  "command.fairgrounds.booth.updating": "Updating booth data",
+
+  "command.fairgrounds.booth.marker.error": "Failed to update booth maker pos; %s",
+  "command.fairgrounds.booth.marker.updated": "Updated booth maker pos to %s, %s",
+
+  "command.fairgrounds.booth.warp.error": "Failed to update booth warp; %s",
+  "command.fairgrounds.booth.warp.updated": "Updated booth maker warp to %s",
+  "command.fairgrounds.booth.warp.pos": "[%s, %s, %s] facing %s",
+
+  "command.fairgrounds.booth.icon.error": "Failed to update booth item icon; %s",
+  "command.fairgrounds.booth.icon.updated": "Updated booth item icon to %s",
+
+  "command.fairgrounds.booth.status.error": "Failed to update booth status; %s",
+  "command.fairgrounds.booth.status.updated": "Updated booth status to %s",
+
+  "fairgrounds.booth_status.under_construction": "Under construction",
+  "fairgrounds.booth_status.playable": "Playable",
+  "fairgrounds.booth_status.complete": "Complete",
+
+  "fairgrounds.warp_direction.north": "North",
+  "fairgrounds.warp_direction.north_north_east": "North north east",
+  "fairgrounds.warp_direction.north_east": "North east",
+  "fairgrounds.warp_direction.east_north_east": "East north east",
+  "fairgrounds.warp_direction.east": "East",
+  "fairgrounds.warp_direction.east_south_east": "East south east",
+  "fairgrounds.warp_direction.south_east": "South east",
+  "fairgrounds.warp_direction.south_south_east": "South south east",
+  "fairgrounds.warp_direction.south": "South",
+  "fairgrounds.warp_direction.south_south_west": "South south west",
+  "fairgrounds.warp_direction.south_west": "South west",
+  "fairgrounds.warp_direction.west_south_west": "West south west",
+  "fairgrounds.warp_direction.west": "West",
+  "fairgrounds.warp_direction.west_north_west": "West north west",
+  "fairgrounds.warp_direction.north_west": "North west",
+  "fairgrounds.warp_direction.north_north_west": "North north west"
+}
