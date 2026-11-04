@@ -37,8 +37,6 @@ import static net.modfest.Constants.Platform.USERS_CACHE_FILE;
 
 public class PlatformDataManager {
 	public static final Logger LOGGER = LoggerFactory.getLogger("Fairgrounds Platform Data");
-	public static final int CONNECT_TIMEOUT_MS = 5000;
-	public static final int READ_TIMEOUT_MS = 5000;
 
 	private static final ScheduledExecutorService EXECUTOR;
 
