@@ -439,10 +439,26 @@ public class HashingByteBuf extends WrappedByteBuf {
 	}
 
 	private void hashByteBuf(ByteBuf val) {
-		hasher.putBytes(val.array(), val.readerIndex(), val.writerIndex());
+		if (val.nioBufferCount() > 0) {
+			hasher.putBytes(val.nioBuffer());
+		} else if (val.hasArray()) {
+			hasher.putBytes(val.array(), val.readerIndex(), val.readableBytes());
+		} else {
+			byte[] tmp = new byte[val.readableBytes()];
+			val.getBytes(val.readerIndex(), tmp);
+			hasher.putBytes(tmp);
+		}
 	}
 
 	private void hashByteBuf(ByteBuf val, int index, int length) {
-		hasher.putBytes(val.array(), index, length);
+		if (val.nioBufferCount() > 0) {
+			hasher.putBytes(val.nioBuffer(index, length));
+		} else if (val.hasArray()) {
+			hasher.putBytes(val.array(), index, length);
+		} else {
+			byte[] tmp = new byte[length];
+			val.getBytes(index, tmp);
+			hasher.putBytes(tmp);
+		}
 	}
 }
