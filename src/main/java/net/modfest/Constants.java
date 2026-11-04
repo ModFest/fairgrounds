@@ -3,13 +3,13 @@ package net.modfest;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.File;
 import java.nio.file.Path;
 
 public class Constants {
-	public static final Gson GSON = new Gson();
+	public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	public static final HashFunction SHA_512 = Hashing.sha512();
 	public static final Path GAME_DIR = FabricLoader.getInstance().getGameDir();
 	public static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
