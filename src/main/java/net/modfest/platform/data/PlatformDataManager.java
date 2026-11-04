@@ -159,7 +159,8 @@ public class PlatformDataManager {
 				return;
 			}
 
-			byte[] hash = byteBuf.readByteArray(hasher.hashBits() >> 3);
+			byte[] hash = new byte[(hasher.hashBits() >> 3)];
+			byteBuf.readBytes(hash);
 			hasher.resetHasher();
 
 			// Stream codecs are in binary, so we can use them to make the
@@ -200,7 +201,8 @@ public class PlatformDataManager {
 				return;
 			}
 
-			byte[] hash = byteBuf.readByteArray(hasher.hashBits() >> 3);
+			byte[] hash = new byte[(hasher.hashBits() >> 3)];
+			byteBuf.readBytes(hash);
 			hasher.resetHasher();
 
 			// Stream codecs are in binary, so we can use them to make the
@@ -251,7 +253,7 @@ public class PlatformDataManager {
 			hasher.resetHasher();
 			byteBuf.markWriterIndex();
 			byteBuf.writerIndex(Long.SIZE >> 3);
-			byteBuf.writeByteArray(hash);
+			byteBuf.writeBytes(hash);
 			byteBuf.resetWriterIndex();
 
 			fileStream.write(byteBuf.array());
@@ -291,7 +293,7 @@ public class PlatformDataManager {
 			hasher.resetHasher();
 			byteBuf.markWriterIndex();
 			byteBuf.writerIndex(Long.SIZE >> 3);
-			byteBuf.writeByteArray(hash);
+			byteBuf.writeBytes(hash);
 			byteBuf.resetWriterIndex();
 
 			fileStream.write(byteBuf.array());
