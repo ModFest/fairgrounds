@@ -100,8 +100,8 @@ public class UserData {
 
 	public enum Role implements StringRepresentable {
 		NONE,
-		TEAM_MEMBER,
-		PARTICIPANT;
+		VOLUNTEER,
+		TEAM_MEMBER;
 
 		public static final StringRepresentable.EnumCodec<Role> CODEC = StringRepresentable.fromEnum(Role::values);
 		private static final IntFunction<Role> BY_ID = ByIdMap.continuous(Role::ordinal, values(), ByIdMap.OutOfBoundsStrategy.WRAP);
