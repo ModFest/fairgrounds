@@ -2,6 +2,7 @@ package net.modfest.platform.data;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Util;
 import net.modfest.Constants;
 import net.modfest.buffer.HashingByteBuf;
 import net.modfest.config.PlatformConfig;
@@ -79,7 +80,7 @@ public class PlatformDataManager {
 			saveUserDataCache();
 			saveSubmissionCache();
 			return this;
-		});
+		}, Util.backgroundExecutor());
 	}
 
 	public CompletableFuture<PlatformDataManager> stopUpdater() {
@@ -101,7 +102,7 @@ public class PlatformDataManager {
 			}
 
 			return this;
-		});
+		}, Util.backgroundExecutor());
 	}
 
 	public @Nullable UserData getUser(UUID uuid) {
