@@ -149,7 +149,7 @@ public final class PlatformApi {
 	}
 
 	private <T extends @Nullable Object> void setConnectionBody(HttpURLConnection connection, T data, Encoder<T> encoder) throws IOException {
-		DataResult<JsonElement> encoded = encoder.encodeStart(JsonOps.COMPRESSED, data);
+		DataResult<JsonElement> encoded = encoder.encodeStart(JsonOps.INSTANCE, data);
 		String body = GSON.toJson(encoded.getOrThrow(error -> new IOException("Failed to encode data for request; " + error)));
 		byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
 

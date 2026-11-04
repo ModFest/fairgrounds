@@ -226,7 +226,9 @@ public class PlatformDataManager {
 
 	private void saveUserDataCache() {
 		File file = USERS_CACHE_FILE.toFile();
-		if (!createFile(file)) return;
+		if (!file.exists()) {
+			file.getParentFile().mkdirs();
+		}
 
 		try (FileOutputStream fileStream = new FileOutputStream(file)) {
 			HashingByteBuf hasher = createHashingBuf();
@@ -263,7 +265,9 @@ public class PlatformDataManager {
 
 	private void saveSubmissionCache() {
 		File file = SUBMISSIONS_CACHE_FILE.toFile();
-		if (!createFile(file)) return;
+		if (!file.exists()) {
+			file.getParentFile().mkdirs();
+		}
 
 		try (FileOutputStream fileStream = new FileOutputStream(file)) {
 			HashingByteBuf hasher = createHashingBuf();
@@ -296,21 +300,6 @@ public class PlatformDataManager {
 		} catch (Exception e) {
 			LOGGER.error("Unexpected error whilst saving submission cache file", e);
 		}
-	}
-
-	@SuppressWarnings({"ResultOfMethodCallIgnored", "BooleanMethodIsAlwaysInverted"})
-	private static boolean createFile(File file) {
-		if (!file.exists()) {
-			file.getParentFile().mkdirs();
-			/*try {
-				file.createNewFile();
-			} catch (IOException e) {
-				LOGGER.error("Failed to create cache file {}", file.getName(), e);
-				return false;
-			}*/
-		}
-
-		return true;
 	}
 
 	// TODO: make both fetches independent of each other, so a failed fetch doesn't fail both

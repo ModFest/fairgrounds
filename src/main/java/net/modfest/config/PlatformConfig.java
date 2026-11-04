@@ -59,17 +59,15 @@ public record PlatformConfig(
 			File file = CONFIG_FILE.toFile();
 			if (!file.exists()) {
 				file.getParentFile().mkdirs();
-				file.createNewFile();
 			}
 
 			var encoded = CODEC.encodeStart(JsonOps.INSTANCE, this);
 			if (encoded.isError()) {
-				LOGGER.error("Failed to serialize config to JSON; {}", encoded.error().get().message());
+				LOGGER.error("Failed to serialize config to JSON; {}", encoded.error().orElseThrow().message());
 				return;
 			}
 
 			Files.writeString(CONFIG_FILE, Constants.GSON.toJson(encoded.getOrThrow()), StandardCharsets.UTF_8);
-
 		} catch (IOException e) {
 			LOGGER.error("Failed to save platform config file", e);
 		}
