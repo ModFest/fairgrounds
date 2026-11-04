@@ -83,7 +83,7 @@ public final class PlatformApi {
 		HttpURLConnection connection;
 		try {
 			url = createUrl(endpoint);
-		} catch (MalformedURLException e) {
+		} catch (MalformedURLException | IllegalArgumentException e) {
 			return DataOrThrowable.throwable("Could not build URL for endpoint " + endpoint, e);
 		}
 		try {
