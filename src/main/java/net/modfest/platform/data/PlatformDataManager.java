@@ -264,7 +264,7 @@ public class PlatformDataManager {
 			byteBuf.writeBytes(hash);
 			byteBuf.resetWriterIndex();
 
-			fileStream.write(byteBuf.array());
+			byteBuf.getBytes(0, fileStream, byteBuf.readableBytes());
 		} catch (FileNotFoundException e) {
 			LOGGER.error("Could not create or open the user data cache file for saving", e);
 		} catch (IOException e) {
@@ -307,7 +307,7 @@ public class PlatformDataManager {
 			byteBuf.writeBytes(hash);
 			byteBuf.resetWriterIndex();
 
-			fileStream.write(byteBuf.array());
+			byteBuf.getBytes(0, fileStream, byteBuf.readableBytes());
 		} catch (FileNotFoundException e) {
 			LOGGER.error("Could not create or open the submission cache file for saving", e);
 		} catch (IOException e) {
