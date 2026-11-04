@@ -40,11 +40,7 @@ public record WarpCoordinates(int x, int y, int z, Direction direction) {
 
 	@Override
 	public String toString() {
-		return Runtime.formatNumbers(toString(Options.NUMBER_FORMAT));
-	}
-
-	public String toString(NumberFormat formatter) {
-		return "Pos: (" + formatter.format(x) + " " + formatter.format(y) + " " + formatter.format(z) + "), Direction: " + direction;
+		return "[" + x + ", " + y + ", " + z + "] facing " + direction;
 	}
 
 	public enum Direction implements StringRepresentable {
