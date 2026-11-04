@@ -57,6 +57,11 @@ public class PlatformDataManager {
 	}
 
 	public CompletableFuture<PlatformDataManager> start() {
+		// Don't fetch platform data when no token is configured
+		if (config.platformToken().isEmpty()) {
+			return CompletableFuture.completedFuture(this);
+		}
+
 		return stopUpdater().thenApply(_ -> {
 			this.loadCacheInternal();
 			updater = EXECUTOR.scheduleAtFixedRate(() -> {
