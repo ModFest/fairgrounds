@@ -84,11 +84,12 @@ public class PlatformDataManager {
 	}
 
 	public CompletableFuture<PlatformDataManager> stopUpdater() {
-		return CompletableFuture.supplyAsync(() -> {
-			if (updater == null) return this;
+		final ScheduledFuture<?> updater = this.updater;
+		this.updater = null;
 
-			ScheduledFuture<?> updater = this.updater;
-			this.updater = null;
+		if (updater == null) return CompletableFuture.completedFuture(this);
+
+		return CompletableFuture.supplyAsync(() -> {
 			updater.cancel(false);
 			if (updater.getDelay(TimeUnit.NANOSECONDS) <= 0) {
 				try {
