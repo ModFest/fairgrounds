@@ -8,16 +8,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.commands.arguments.coordinates.ColumnPosArgument;
-import net.minecraft.commands.arguments.coordinates.Vec3Argument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ColumnPos;
-import net.minecraft.world.phys.Vec3;
 import net.modfest.Fairgrounds;
 import net.modfest.commands.arguments.BoothStatusArgument;
 import net.modfest.commands.arguments.SubmissionArgument;
@@ -37,6 +34,7 @@ import static net.modfest.commands.FairgroundsCommands.ASYNC_PREFIX;
 
 public class BoothCommand {
 	private static final DynamicCommandExceptionType ERROR_INVALID_ITEM = new DynamicCommandExceptionType(value -> Component.translatable("command.fairgrounds.booth.error.invalid_item", value));
+	public static final Component DATA_PAD = Component.translatable("command.fairgrounds.booth.data.pad");
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
@@ -103,22 +101,22 @@ public class BoothCommand {
 
 	private static int getData(CommandSourceStack source, SubmissionData submission) {
 		MutableComponent text = Text.compound(
-		  "Submission and booth data",
-		  "\n  Submission id: " + submission.id(),
-		  "\n  Name: " + submission.name(),
-		  "\n  Mod ID: " + submission.modId()
+		  Component.translatable("command.fairgrounds.booth.data.title"),
+		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.sub_id", submission.id()),
+		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.name", submission.name()),
+		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.mod_id", String.valueOf(submission.modId()))
 		);
 
 		BoothData boothData = submission.boothData();
 		if (boothData != null) {
 			Text.append(text,
-			  "\n  Marker pos: " + boothData.markerPos(),
-			  "\n  Warp pos: " + boothData.warp(),
-			  "\n  Item icon: " + boothData.itemIcon(),
-			  "\n  Status: " + boothData.status()
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.marker", String.valueOf(boothData.markerPos())),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.warp", String.valueOf(boothData.warp())),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.icon", String.valueOf(boothData.itemIcon())),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.status", String.valueOf(boothData.status()))
 			);
 		} else {
-			text.append("\n  No booth data");
+			Text.append(text, DATA_PAD, Component.translatable("command.fairgrounds.booth.data.no_booth"));
 		}
 
 		source.sendSuccess(() -> text, false);

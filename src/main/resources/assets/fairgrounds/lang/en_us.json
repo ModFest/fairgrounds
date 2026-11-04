@@ -8,6 +8,17 @@
 
   "command.fairgrounds.prefix.async": "[Async] ",
 
+  "command.fairgrounds.booth.data.title": "Submission and booth data",
+  "command.fairgrounds.booth.data.pad": "\n  ",
+  "command.fairgrounds.booth.data.sub_id": "Submission id: %s",
+  "command.fairgrounds.booth.data.name": "Name: %s",
+  "command.fairgrounds.booth.data.mod_id": "Mod ID: %s",
+  "command.fairgrounds.booth.data.marker": "Marker pos: %s",
+  "command.fairgrounds.booth.data.warp": "Warp pos: %s",
+  "command.fairgrounds.booth.data.icon": "Item icon: %s",
+  "command.fairgrounds.booth.data.status": "Status: %s",
+  "command.fairgrounds.booth.data.no_booth": "No booth data",
+
   "command.fairgrounds.booth.error.invalid_item": "Invalid item %s",
   "command.fairgrounds.booth.updating": "Updating booth data",
 
