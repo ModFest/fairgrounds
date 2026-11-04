@@ -29,8 +29,8 @@ public class SubmissionData {
 		instance.group(
 			Codec.STRING.fieldOf("id").forGetter(SubmissionData::id),
 			Codec.STRING.fieldOf("name").forGetter(SubmissionData::name),
+			Codec.STRING.optionalFieldOf("mod_id").forGetter(Optionals.wrap(SubmissionData::modId)),
 			Codec.STRING.fieldOf("description").forGetter(SubmissionData::description),
-			Codec.STRING.fieldOf("mod_id").forGetter(SubmissionData::modId),
 			Codec.STRING.listOf().fieldOf("authors").forGetter(SubmissionData::authors),
 			BoothData.CODEC.optionalFieldOf("booth_data").forGetter(Optionals.wrap(SubmissionData::boothData))
 		).apply(instance, SubmissionData::new)
@@ -39,8 +39,8 @@ public class SubmissionData {
 	public static final StreamCodec<FriendlyByteBuf, SubmissionData> STREAM_CODEC = StreamCodec.composite(
 		ByteBufCodecs.STRING_UTF8, SubmissionData::id,
 		ByteBufCodecs.STRING_UTF8, SubmissionData::name,
+		ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs::optional), Optionals.wrap(SubmissionData::modId),
 		ByteBufCodecs.STRING_UTF8, SubmissionData::description,
-		ByteBufCodecs.STRING_UTF8, SubmissionData::modId,
 		ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), SubmissionData::authors,
 		BoothData.STREAM_CODEC.apply(ByteBufCodecs::optional), Optionals.wrap(SubmissionData::boothData),
 		SubmissionData::new
@@ -49,23 +49,23 @@ public class SubmissionData {
 
 	private final String id;
 	private final String name;
-	private final String modId;
+	private final @Nullable String modId;
 	private final String description;
 	private final List<String> authors;
 	private final @Nullable BoothData boothData;
 	private final List<UUID> authorAccounts = new ArrayList<>();
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	public SubmissionData(String id, String name, String modId, String description, List<String> authors, Optional<BoothData> boothData) {
+	public SubmissionData(String id, String name, Optional<String> modId, String description, List<String> authors, Optional<BoothData> boothData) {
 		this.id = id;
 		this.name = name;
-		this.modId = modId;
+		this.modId = modId.orElse(null);
 		this.description = description;
 		this.authors = authors;
 		this.boothData = boothData.orElse(null);
 	}
 
-	public SubmissionData(String id, String name, String modId, String description, List<String> authors, @Nullable BoothData boothData) {
+	public SubmissionData(String id, String name, @Nullable String modId, String description, List<String> authors, @Nullable BoothData boothData) {
 		this.id = id;
 		this.name = name;
 		this.modId = modId;
@@ -82,7 +82,7 @@ public class SubmissionData {
 		return name;
 	}
 
-	public String modId() {
+	public @Nullable String modId() {
 		return modId;
 	}
 
