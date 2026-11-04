@@ -255,7 +255,7 @@ public class PlatformDataManager {
 
 			fileStream.write(byteBuf.array());
 		} catch (FileNotFoundException e) {
-			LOGGER.error("Could not find the user data cache file for saving", e);
+			LOGGER.error("Could not create or open the user data cache file for saving", e);
 		} catch (IOException e) {
 			LOGGER.warn("Failed to read the user data cache", e);
 		} catch (Exception e) {
@@ -294,7 +294,7 @@ public class PlatformDataManager {
 
 			fileStream.write(byteBuf.array());
 		} catch (FileNotFoundException e) {
-			LOGGER.error("Could not find the submission cache file for saving", e);
+			LOGGER.error("Could not create or open the submission cache file for saving", e);
 		} catch (IOException e) {
 			LOGGER.warn("Failed to read the submission cache", e);
 		} catch (Exception e) {
