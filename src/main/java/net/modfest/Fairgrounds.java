@@ -3,7 +3,6 @@ package net.modfest;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.DefaultUncaughtExceptionHandler;
 import net.minecraft.resources.Identifier;
 
 import net.modfest.commands.FairgroundsCommands;
@@ -26,10 +25,10 @@ public class Fairgrounds implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		FairgroundsCommands.init();
-		dataManager.load();
+		dataManager.start();
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			dataManager.shutdown().thenCompose(_ -> dataManager.save());
+			dataManager.stopUpdater().thenCompose(_ -> dataManager.save());
 		});
 	}
 
@@ -40,9 +39,9 @@ public class Fairgrounds implements ModInitializer {
 	public static CompletableFuture<Void> reloadConfig() {
 		platformConfig = PlatformConfig.load();
 
-		return dataManager.shutdown()
+		return dataManager.stopUpdater()
 			.thenCompose(_ -> dataManager.save())
-			.thenCompose(_ -> new PlatformDataManager(platformConfig).load())
+			.thenCompose(_ -> new PlatformDataManager(platformConfig).start())
 			.thenAccept(manager -> dataManager = manager);
 	}
 

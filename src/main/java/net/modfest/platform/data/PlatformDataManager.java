@@ -55,8 +55,8 @@ public class PlatformDataManager {
 		this.api = new PlatformApi(config);
 	}
 
-	public CompletableFuture<PlatformDataManager> load() {
-		return shutdown().thenApply(_ -> {
+	public CompletableFuture<PlatformDataManager> start() {
+		return stopUpdater().thenApply(_ -> {
 			this.loadCacheInternal();
 			updater = EXECUTOR.scheduleAtFixedRate(() -> {
 				try {
@@ -82,7 +82,7 @@ public class PlatformDataManager {
 		});
 	}
 
-	public CompletableFuture<PlatformDataManager> shutdown() {
+	public CompletableFuture<PlatformDataManager> stopUpdater() {
 		return CompletableFuture.supplyAsync(() -> {
 			if (updater == null) return this;
 
