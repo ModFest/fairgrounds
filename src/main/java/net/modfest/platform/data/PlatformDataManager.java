@@ -58,7 +58,17 @@ public class PlatformDataManager {
 	public CompletableFuture<PlatformDataManager> load() {
 		return shutdown().thenApply(_ -> {
 			this.loadCacheInternal();
-			updater = EXECUTOR.scheduleAtFixedRate(this::updateData, 0, config.fetchPeriodMinutes(), TimeUnit.MINUTES);
+			updater = EXECUTOR.scheduleAtFixedRate(() -> {
+				try {
+					updateData();
+				} catch (Error e) {
+					LOGGER.error("Failed to update platform data, Java error, not attempting to recover", e);
+					// We do not want to catch errors, so we will rethrow it and let the task fail
+					throw e;
+				} catch (Throwable e) {
+					LOGGER.error("Failed to update platform data, uncaught exception", e);
+				}
+			}, 0, config.fetchPeriodMinutes(), TimeUnit.MINUTES);
 			return this;
 		});
 	}
@@ -402,6 +412,7 @@ public class PlatformDataManager {
 			BasicThreadFactory.builder()
 				.namingPattern("Platform Data Updater %d")
 				.daemon()
+				.uncaughtExceptionHandler((thread, e) -> LOGGER.error("{} crashed with an unhandled exception", thread.getName(), e))
 				.build()
 		);
 		executor.setRemoveOnCancelPolicy(true);
