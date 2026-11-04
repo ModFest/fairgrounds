@@ -62,7 +62,7 @@ public class SubmissionArgument implements ArgumentType<SubmissionData> {
 	@Override
 	public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
 		if (!(context.getSource() instanceof SharedSuggestionProvider)) return Suggestions.empty();
-		return SharedSuggestionProvider.suggest(getSubmissions(context.getSource()).stream().map(SubmissionData::modId), builder);
+		return SharedSuggestionProvider.suggest(getSubmissions(context.getSource()).stream().map(SubmissionData::id), builder);
 	}
 
 	@Override

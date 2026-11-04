@@ -121,9 +121,9 @@ public class PlatformDataManager {
 	}
 
 	public void updateSubmission(SubmissionData submission) {
-		SubmissionData old = this.submissions.get(submission.modId());
+		SubmissionData old = this.submissions.get(submission.id());
 		if (old == null) {
-			LOGGER.error("Tried to update data for {} but could not find it in the map", submission.modId());
+			LOGGER.error("Tried to update data for {} but could not find it in the map", submission.id());
 			return;
 		}
 
@@ -131,7 +131,7 @@ public class PlatformDataManager {
 
 		submission.authorAccounts().clear();
 		submission.authorAccounts().addAll(old.authorAccounts());
-		this.submissions.put(submission.modId(), submission);
+		this.submissions.put(submission.id(), submission);
 	}
 
 	public PlatformApi api() {
@@ -227,6 +227,7 @@ public class PlatformDataManager {
 	private void saveUserDataCache() {
 		File file = USERS_CACHE_FILE.toFile();
 		if (!file.exists()) {
+			//noinspection ResultOfMethodCallIgnored
 			file.getParentFile().mkdirs();
 		}
 
@@ -266,6 +267,7 @@ public class PlatformDataManager {
 	private void saveSubmissionCache() {
 		File file = SUBMISSIONS_CACHE_FILE.toFile();
 		if (!file.exists()) {
+			//noinspection ResultOfMethodCallIgnored
 			file.getParentFile().mkdirs();
 		}
 
@@ -345,7 +347,7 @@ public class PlatformDataManager {
 		Map<String, SubmissionData> submissions = new HashMap<>();
 		if (submissionData != null) {
 			for (SubmissionData submission : submissionData) {
-				submissions.put(submission.modId(), submission);
+				submissions.put(submission.id(), submission);
 				for (String author : submission.authors()) {
 					UserData user = userById.get(author);
 					user.submissions().add(submission);
