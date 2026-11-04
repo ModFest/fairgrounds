@@ -25,7 +25,10 @@ public class Fairgrounds implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		FairgroundsCommands.init();
-		dataManager.start();
+
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+			dataManager.start();
+		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			dataManager.stopUpdater().thenCompose(_ -> dataManager.save());
