@@ -227,6 +227,9 @@ public class PlatformDataManager {
 	}
 
 	private void saveUserDataCache() {
+		// Skip saving if there is no data to save
+		if (users.isEmpty()) return;
+
 		File file = USERS_CACHE_FILE.toFile();
 		if (!file.exists()) {
 			//noinspection ResultOfMethodCallIgnored
@@ -267,6 +270,9 @@ public class PlatformDataManager {
 	}
 
 	private void saveSubmissionCache() {
+		// Skip saving if there is no data to save
+		if (submissions.isEmpty()) return;
+
 		File file = SUBMISSIONS_CACHE_FILE.toFile();
 		if (!file.exists()) {
 			//noinspection ResultOfMethodCallIgnored
