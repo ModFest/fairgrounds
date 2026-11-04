@@ -4,7 +4,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.WrappedByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
@@ -39,6 +38,17 @@ public class HashingByteBuf extends WrappedByteBuf {
 
 	public void resetHasher() {
 		this.hasher = Objects.requireNonNull(hashFunction.newHasher());
+	}
+
+	@Override
+	public ByteBuf readerIndex(int readerIndex) {
+		// Some vanilla stream codecs get the bytes without touching the reader index and offsets it later when reading
+		if (readerIndex > this.readerIndex()) {
+			byte[] bytes =  new byte[readerIndex - this.readerIndex()];
+			this.getBytes(this.readerIndex(), bytes);
+			hasher.putBytes(bytes);
+		}
+		return super.readerIndex(readerIndex);
 	}
 
 	@Override
