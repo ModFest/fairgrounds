@@ -1,6 +1,5 @@
 {
-  "argument.fairgrounds.submission.empty": "No submission found",
-  "argument.fairgrounds.submission.not_found": "No submission with mod id %s found",
+  "argument.fairgrounds.submission.not_found": "Unknown submission %s",
   "argument.fairgrounds.enum.invalid": "Not a valid %s",
 
   "argument.fairgrounds.booth/status.descriptor": "booth status",

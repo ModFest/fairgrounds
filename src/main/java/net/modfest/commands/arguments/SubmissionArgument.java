@@ -5,12 +5,10 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.coordinates.Coordinates;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.PermissionSetSupplier;
 import net.minecraft.server.permissions.Permissions;
@@ -25,9 +23,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @NullMarked
-public class SubmissionArgument implements ArgumentType<SubmissionData> {
-	private static final SimpleCommandExceptionType ERROR_NO_RESULTS = new SimpleCommandExceptionType(Component.translatable("argument.fairgrounds.submission.empty"));
-	private static final DynamicCommandExceptionType ERROR_NO_RESULTS_FOUND = new DynamicCommandExceptionType(name -> Component.translatable("argument.fairgrounds.submission.not_found", name));
+public class SubmissionArgument implements ArgumentType<String> {
+	private static final DynamicCommandExceptionType ERROR_NOT_FOUND = new DynamicCommandExceptionType(name -> Component.translatable("argument.fairgrounds.submission.not_found", name));
 	private static final Collection<String> EXAMPLES = Arrays.asList("glowcase", "fairgrounds", "fabric-api");
 
 	public static SubmissionArgument submission() {
@@ -35,34 +32,35 @@ public class SubmissionArgument implements ArgumentType<SubmissionData> {
 	}
 
 	@Override
-	public SubmissionData parse(StringReader reader) throws CommandSyntaxException {
-		return parse(reader, getSubmissions(null));
+	public String parse(StringReader reader) {
+		return reader.readUnquotedString();
 	}
 
-	@Override
-	public <S> SubmissionData parse(StringReader reader, S source) throws CommandSyntaxException {
-		return parse(reader, getSubmissions(source));
+	public static SubmissionData getSubmission(CommandContext<CommandSourceStack> context, String name) throws CommandSyntaxException {
+		String submissionName = context.getArgument(name, String.class);
+
+		return getSubmission(submissionName, getSubmissions(context.getSource()));
 	}
 
-	public SubmissionData parse(StringReader reader, Collection<SubmissionData> submissions) throws CommandSyntaxException {
-		if (submissions.isEmpty()) throw ERROR_NO_RESULTS.create();
-
-		var submissionName = reader.readUnquotedString();
+	private static SubmissionData getSubmission(String submissionName, Collection<SubmissionData> submissions) throws CommandSyntaxException {
+		if (submissions.isEmpty()) throw ERROR_NOT_FOUND.create(submissionName);
 
 		SubmissionData submission = Fairgrounds.platformData().getSubmission(submissionName);
-		if (submission == null || !submissions.contains(submission)) throw ERROR_NO_RESULTS_FOUND.create(submissionName);
+		if (submission == null || !submissions.contains(submission)) throw ERROR_NOT_FOUND.create(submissionName);
 
 		return submission;
 	}
 
-	public static SubmissionData getSubmission(CommandContext<CommandSourceStack> context, String name) {
-		return context.getArgument(name, SubmissionData.class);
-	}
-
 	@Override
 	public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-		if (!(context.getSource() instanceof SharedSuggestionProvider)) return Suggestions.empty();
-		return SharedSuggestionProvider.suggest(getSubmissions(context.getSource()).stream().map(SubmissionData::id), builder);
+		S rawSource = context.getSource();
+		if (rawSource instanceof CommandSourceStack source) {
+			return SharedSuggestionProvider.suggest(getSubmissions(source).stream().map(SubmissionData::id), builder);
+		} else if (rawSource instanceof SharedSuggestionProvider source) {
+			return source.customSuggestion(context);
+		}
+
+		return Suggestions.empty();
 	}
 
 	@Override
@@ -70,7 +68,7 @@ public class SubmissionArgument implements ArgumentType<SubmissionData> {
 		return EXAMPLES;
 	}
 
-	private <S> Collection<SubmissionData> getSubmissions(@Nullable S source) {
+	private static <S> Collection<SubmissionData> getSubmissions(@Nullable S source) {
 		// Can't find a submission without permission or player
 		if (!(source instanceof PermissionSetSupplier sender)) return List.of();
 
