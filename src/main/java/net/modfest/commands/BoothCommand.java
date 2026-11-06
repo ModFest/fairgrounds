@@ -40,6 +40,7 @@ public class BoothCommand {
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
 		  literal("booth")
+			.requires(CommandSourceStack::isPlayer)
 			.then(literal("data")
 			  .then(argument("submission", SubmissionArgument.submission())
 				.executes(context -> {

@@ -1,14 +1,15 @@
 {
-	"required": true,
-	"package": "net.modfest.mixin",
-	"compatibilityLevel": "JAVA_25",
-	"mixins": [
-		"ExampleMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
+  "required": true,
+  "package": "net.modfest.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "accessor.CommandSourceStackAccessor",
+    "accessor.ServerPlayerAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
 	}
 }

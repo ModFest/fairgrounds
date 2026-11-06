@@ -10,9 +10,12 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionSetSupplier;
 import net.minecraft.server.permissions.Permissions;
 import net.modfest.Fairgrounds;
+import net.modfest.mixin.accessor.CommandSourceStackAccessor;
+import net.modfest.mixin.accessor.ServerPlayerAccessor;
 import net.modfest.platform.data.SubmissionData;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -20,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @NullMarked
@@ -72,14 +76,23 @@ public class SubmissionArgument implements ArgumentType<String> {
 		// Can't find a submission without permission or player
 		if (!(source instanceof PermissionSetSupplier sender)) return List.of();
 
-		if (sender.permissions().hasPermission(Permissions.COMMANDS_ADMIN)) {
-			return Fairgrounds.platformData().getSubmissions().values();
-		}
-
 		if (source instanceof CommandSourceStack sourceStack) {
-			// Doesn't have permission and isn't a player, better to deny it
+			// Isn't a player, better to deny it
 			if (!sourceStack.isPlayer()) return List.of();
-			var user = Fairgrounds.platformData().getUser(sourceStack.getPlayer().getUUID());
+
+			ServerPlayer player = sourceStack.getPlayer();
+			assert player != null;
+
+			if (!Objects.equals(((CommandSourceStackAccessor) sourceStack).getSource(), ((ServerPlayerAccessor) player).getCommandSource())) {
+				// nope, not happening
+				return List.of();
+			}
+
+			if (sender.permissions().hasPermission(Permissions.COMMANDS_ADMIN)) {
+				return Fairgrounds.platformData().getSubmissions().values();
+			}
+
+			var user = Fairgrounds.platformData().getUser(player.getUUID());
 			if (user == null) return List.of();
 			return user.submissions();
 		}
