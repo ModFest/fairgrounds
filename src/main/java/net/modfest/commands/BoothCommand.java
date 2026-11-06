@@ -35,6 +35,7 @@ import static net.modfest.commands.FairgroundsCommands.ASYNC_PREFIX;
 public class BoothCommand {
 	private static final DynamicCommandExceptionType ERROR_INVALID_ITEM = new DynamicCommandExceptionType(value -> Component.translatable("command.fairgrounds.booth.error.invalid_item", value));
 	public static final Component DATA_PAD = Component.translatable("command.fairgrounds.booth.data.pad");
+	public static final Component NULL = Component.translatable("command.fairgrounds.booth.data.null");
 
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 		dispatcher.register(
@@ -80,6 +81,7 @@ public class BoothCommand {
 				  .executes(context -> {
 					  CommandSourceStack source = context.getSource();
 					  SubmissionData submission = SubmissionArgument.getSubmission(context, "submission");
+					  // Doesn't currently validate if the item exists, but is currently limited to admins
 					  String icon = ResourceKeyArgument.getRegistryKey(context, "item", Registries.ITEM, ERROR_INVALID_ITEM).identifier().toString();
 					  return setIcon(source, submission, icon);
 				  })
@@ -100,20 +102,34 @@ public class BoothCommand {
 	}
 
 	private static int getData(CommandSourceStack source, SubmissionData submission) {
+		String modId = submission.modId();
 		MutableComponent text = Text.compound(
 		  Component.translatable("command.fairgrounds.booth.data.title"),
 		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.sub_id", submission.id()),
 		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.name", submission.name()),
-		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.mod_id", String.valueOf(submission.modId()))
+		  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.mod_id", modId != null ? modId : NULL)
 		);
 
 		BoothData boothData = submission.boothData();
 		if (boothData != null) {
+			ColumnPos marker = boothData.markerPos();
+			WarpCoordinates warp = boothData.warp();
+			String icon = boothData.itemIcon();
+			BoothStatus status = boothData.status();
+
+			Component warpText = warp != null ? Component
+			  .translatable("command.fairgrounds.booth.warp.pos", warp.x(), warp.y(), warp.z(), warp.direction().getComponent())
+			  .withStyle(
+				s -> s.withColor(ChatFormatting.GREEN)
+				  .withClickEvent(new ClickEvent.SuggestCommand("/tp @s %d %d %d %d 0".formatted(warp.x(), warp.y(), warp.z(), warp.direction().yaw())))
+				  .withHoverEvent(new HoverEvent.ShowText(Component.translatable("chat.coordinates.tooltip")))
+			  ) : NULL;
+
 			Text.append(text,
-			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.marker", String.valueOf(boothData.markerPos())),
-			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.warp", String.valueOf(boothData.warp())),
-			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.icon", String.valueOf(boothData.itemIcon())),
-			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.status", String.valueOf(boothData.status()))
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.marker", marker != null ? Component.literal(marker.toString()) : NULL),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.warp", warpText),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.icon", icon != null ? Component.literal(icon) : NULL),
+			  DATA_PAD, Component.translatable("command.fairgrounds.booth.data.status", status != null ? status.getComponent() : NULL)
 			);
 		} else {
 			Text.append(text, DATA_PAD, Component.translatable("command.fairgrounds.booth.data.no_booth"));

@@ -8,6 +8,7 @@
   "command.fairgrounds.prefix.async": "[Async] ",
 
   "command.fairgrounds.booth.data.title": "Submission and booth data",
+  "command.fairgrounds.booth.data.null": "Not set",
   "command.fairgrounds.booth.data.pad": "\n  ",
   "command.fairgrounds.booth.data.sub_id": "Submission id: %s",
   "command.fairgrounds.booth.data.name": "Name: %s",
