@@ -72,10 +72,11 @@ public final class PlatformApi {
 	}
 
 	/// @return The new submission data or an error with an exception
-	public DataOrThrowable<SubmissionData> patchBoothData(String submissionId, BoothData boothData) {
+	public DataOrThrowable<SubmissionData> patchBoothData(/*String user, */String submissionId, BoothData boothData) {
 		return connect(
 			"PATCH",
 			format(PATCH_BOOTH, "eventId", config.eventId(), "subId", submissionId),
+			/*user*/null,
 			boothData, BoothData.CODEC,
 			SubmissionData.CODEC
 		);
@@ -83,18 +84,26 @@ public final class PlatformApi {
 
 	/// @return Data or an error with an exception, data is null if the server response's hash matches the cached one (only on GET requests)
 	private <T> DataOrThrowable<@Nullable T> get(String endpoint, Decoder<T> decoder) {
-		return connect("GET", endpoint, null, null, decoder);
+		return connect("GET", endpoint, null, null, null, decoder);
+	}
+
+	/// @return Data or an error with an exception, data is null if the server response's hash matches the cached one (only on GET requests)
+	private <T> DataOrThrowable<@Nullable T> get(String endpoint, String user, Decoder<T> decoder) {
+		return connect("GET", endpoint, user, null, null, decoder);
 	}
 
 	// TODO: build a better solution then arbitrarily returning null data on hash matches, maybe better solution for errors too?
 	// TODO: async
 	// I was originally going to use ETag but the platform doesn't implement it, and the current setup would require some work to properly implement it - Luna
 	/// @return Data or an error with an exception, data is null if the server response's hash matches the cached one (only on GET requests)
-	private <T, D extends @Nullable Object> DataOrThrowable<T> connect(String method, String endpoint, D data, @Nullable Encoder<D> encoder, Decoder<T> decoder) {
+	private <T, D extends @Nullable Object> DataOrThrowable<T> connect(String method, String endpoint, @Nullable String user, D data, @Nullable Encoder<D> encoder, Decoder<T> decoder) {
 		URI uri = platformUri.resolve(endpoint);
-		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-			.setHeader("Mf-Event-Token", config.platformToken())
-			.timeout(READ_TIMEOUT);
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder().timeout(READ_TIMEOUT);
+
+		requestBuilder.setHeader("Mf-Event-Token", config.platformToken());
+		if (user != null) {
+			requestBuilder.setHeader("Mf-Event-Target-User", user);
+		}
 
 		try {
 			requestBuilder.uri(uri);
