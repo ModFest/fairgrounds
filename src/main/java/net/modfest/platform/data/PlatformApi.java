@@ -4,30 +4,37 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Decoder;
 import com.mojang.serialization.Encoder;
 import com.mojang.serialization.JsonOps;
+import net.minecraft.util.Util;
 import net.modfest.Constants;
 import net.modfest.config.PlatformConfig;
-import org.apache.commons.io.IOUtils;
+import net.modfest.platform.JsonBodyHandler;
 import org.jspecify.annotations.Nullable;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
+import java.net.ConnectException;
+import java.net.ProtocolException;
 import java.net.URI;
-import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublisher;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.HashMap;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-import static net.modfest.Constants.GSON;
 import static net.modfest.platform.data.PlatformDataManager.LOGGER;
 import static net.modfest.util.StringTemplate.format;
 
@@ -36,8 +43,12 @@ public final class PlatformApi {
 	private static final String GET_SUBMISSIONS = "event/{eventId}/submissions";
 	private static final String PATCH_BOOTH = "event/{eventId}/booth/{subId}";
 
-	private static final int CONNECT_TIMEOUT_MS = 5000;
-	private static final int READ_TIMEOUT_MS = 5000;
+	private static final Duration CONNECT_TIMEOUT = Duration.of(5, ChronoUnit.SECONDS);
+	private static final Duration READ_TIMEOUT = Duration.of(5, ChronoUnit.SECONDS);
+	private static final HttpClient CLIENT = HttpClient.newBuilder()
+		.connectTimeout(CONNECT_TIMEOUT)
+		.executor(Util.backgroundExecutor())
+		.build();
 
 	private final Cache<String, String> hashes = CacheBuilder.newBuilder()
 		.expireAfterAccess(Duration.ofMinutes(15))
@@ -76,89 +87,131 @@ public final class PlatformApi {
 	}
 
 	// TODO: build a better solution then arbitrarily returning null data on hash matches, maybe better solution for errors too?
+	// TODO: async
 	// I was originally going to use ETag but the platform doesn't implement it, and the current setup would require some work to properly implement it - Luna
 	/// @return Data or an error with an exception, data is null if the server response's hash matches the cached one (only on GET requests)
 	private <T, D extends @Nullable Object> DataOrThrowable<T> connect(String method, String endpoint, D data, @Nullable Encoder<D> encoder, Decoder<T> decoder) {
-		URL url;
-		HttpURLConnection connection;
+		URI uri = platformUri.resolve(endpoint);
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+			.setHeader("Mf-Event-Token", config.platformToken())
+			.timeout(READ_TIMEOUT);
+
 		try {
-			url = createUrl(endpoint);
-		} catch (MalformedURLException | IllegalArgumentException e) {
-			return DataOrThrowable.throwable("Could not build URL for endpoint " + endpoint, e);
+			requestBuilder.uri(uri);
+		} catch (IllegalArgumentException e) {
+			return DataOrThrowable.throwable("Scheme for " + uri + " is not supported", e);
 		}
+
 		try {
-			connection = createConnection(method, url);
+			requestBuilder.method(method, createBodyPublisher(data, encoder));
+			if (encoder != null) {
+				requestBuilder.header(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8");
+			}
+		} catch (IllegalArgumentException e) {
+			return DataOrThrowable.throwable("The " + method + " method is invalid or restricted", e);
 		} catch (IOException e) {
-			return DataOrThrowable.throwable("Failed to open " + method + " connection to " + url, e);
+			return DataOrThrowable.error(e.getMessage());
 		}
 
-		if (encoder != null) {
-			try {
-				setConnectionBody(connection, data, encoder);
-			} catch (IOException e) {
-				return DataOrThrowable.throwable("Failed to write data to request body " + url, e);
-			}
-		}
+		HttpRequest request = requestBuilder.build();
 
 		try {
-			int status = connection.getResponseCode();
+			LOGGER.debug("Opening {} connection to {}", method, uri);
+			HttpResponse<JsonElement> response = sendSync(request, new JsonBodyHandler());
+
+			JsonElement body = response.body();
+
+			int status = response.statusCode();
 			if (status >= 400) {
-				InputStream stream = connection.getErrorStream();
-				String error = IOUtils.toString(stream, StandardCharsets.UTF_8);
-				return DataOrThrowable.error(error);
+				if (!body.isJsonObject()) {
+					return DataOrThrowable.error(body.toString());
+				}
+
+				JsonElement error = body.getAsJsonObject().get("data");
+				return DataOrThrowable.error(String.valueOf(error != null ? error : body));
 			}
 
-			if (!connection.getContentType().startsWith("application/json")) {
-				return DataOrThrowable.error("Unexpected content type " + connection.getContentType());
-			}
-
-			InputStream stream = connection.getInputStream();
-			String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
 			// Methods like POST and PATCH are unlikely to return a matching value so it's not worth it saving the hash
 			if (method.equalsIgnoreCase("get")) {
 				// Using hashes isn't ideal since it does the entire data fetch and download, but I couldn't use ETag
 				// This is mostly to avoid constantly reprocessing and swapping the data in the data manager
-				String hash = Constants.SHA_512.hashString(content, StandardCharsets.UTF_8).toString();
+				String hash = Constants.SHA_512.hashString(body.toString(), StandardCharsets.UTF_8).toString();
 				String cachedHash = hashes.getIfPresent(endpoint);
 				if (hash.equals(cachedHash)) return DataOrThrowable.data(null);
 
 				hashes.put(endpoint, hash);
 			}
 
-			return DataOrThrowable.of(decoder.parse(JsonOps.INSTANCE, JsonParser.parseString(content)));
+			return DataOrThrowable.of(decoder.parse(JsonOps.INSTANCE, body));
+		} catch (IllegalArgumentException e) {
+			return DataOrThrowable.throwable("Invalid request to " + uri, e);
+		} catch (HttpTimeoutException e) {
+			return DataOrThrowable.throwable("Timed out while connecting to " + uri, e);
+		} catch (ConnectException | SSLHandshakeException | ProtocolException e) {
+			return DataOrThrowable.throwable("Failed to initiate connection to " + uri, e);
+		} catch (InterruptedException e) {
+			return DataOrThrowable.throwable("Interrupted while connecting to " + uri, e);
 		} catch (IOException e) {
-			return DataOrThrowable.throwable("Failed to read from " + url, e);
+			return DataOrThrowable.throwable("IO error while connecting to " + uri, e);
+		} catch (ExecutionException e) {
+			return DataOrThrowable.throwable("Failed to process response from " + uri, e);
+		} catch (Exception e) {
+			return DataOrThrowable.throwable("Unknown error while connecting to " + uri, e);
 		}
 	}
 
-	private URL createUrl(String endpoint) throws MalformedURLException {
-		return platformUri.resolve(endpoint).toURL();
-	}
+	private <T extends @Nullable Object> BodyPublisher createBodyPublisher(T data, @Nullable Encoder<T> encoder) throws IOException {
+		if (encoder == null) return BodyPublishers.noBody();
 
-	private HttpURLConnection createConnection(String method, URL url) throws IOException {
-		LOGGER.debug("Opening {} connection to {}", method, url);
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod(method);
-		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-		connection.setReadTimeout(READ_TIMEOUT_MS);
-		connection.setUseCaches(false);
-
-		connection.addRequestProperty("Mf-Event-Token", config.platformToken());
-
-		return connection;
-	}
-
-	private <T extends @Nullable Object> void setConnectionBody(HttpURLConnection connection, T data, Encoder<T> encoder) throws IOException {
 		DataResult<JsonElement> encoded = encoder.encodeStart(JsonOps.INSTANCE, data);
-		String body = GSON.toJson(encoded.getOrThrow(error -> new IOException("Failed to encode data for request; " + error)));
-		byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+		JsonElement body = encoded.getOrThrow(error -> new IOException("Failed to encode data for request; " + error));
 
-		connection.setRequestProperty(HttpHeaders.CONTENT_TYPE, "application/json; charset=utf-8");
-		connection.setRequestProperty(HttpHeaders.CONTENT_LENGTH, Integer.toString(bodyBytes.length));
-		connection.setDoOutput(true);
+		return BodyPublishers.ofString(body.toString());
+	}
 
-		try (OutputStream outputStream = connection.getOutputStream()) {
-			IOUtils.write(bodyBytes, outputStream);
+	private static <T> HttpResponse<T> sendSync(HttpRequest req, BodyHandler<T> responseHandler) throws IOException, InterruptedException, ExecutionException {
+		if (Thread.interrupted()) throw new InterruptedException();
+
+		CompletableFuture<HttpResponse<T>> future = null;
+		try {
+			future = CLIENT.sendAsync(req, responseHandler);
+			return future.get();
+		} catch (InterruptedException ie) {
+			future.cancel(true);
+			throw ie;
+		} catch (ExecutionException e) {
+			final Throwable throwable = e.getCause();
+			final String msg = throwable.getMessage();
+
+			switch (throwable) {
+				case IllegalArgumentException _ -> throw new IllegalArgumentException(msg, throwable);
+				case SecurityException _ -> throw new SecurityException(msg, throwable);
+				case HttpConnectTimeoutException _ -> {
+					HttpConnectTimeoutException hcte = new HttpConnectTimeoutException(msg);
+					hcte.initCause(throwable);
+					throw hcte;
+				}
+				case HttpTimeoutException _ -> throw new HttpTimeoutException(msg);
+				case ConnectException _ -> {
+					ConnectException ce = new ConnectException(msg);
+					ce.initCause(throwable);
+					throw ce;
+				}
+				case SSLHandshakeException _ ->
+					// special case for SSLHandshakeException
+					throw new SSLHandshakeException(msg, throwable);
+				case SSLException sslException ->
+					// any other SSLException is wrapped in a plain
+					// SSLException
+					throw new SSLException(msg, throwable);
+				case ProtocolException _ -> {
+					ProtocolException pe = new ProtocolException(msg);
+					pe.initCause(throwable);
+					throw pe;
+				}
+				case IOException _ -> throw new IOException(msg, throwable);
+				default -> throw new ExecutionException(msg, throwable);
+			}
 		}
 	}
 }
